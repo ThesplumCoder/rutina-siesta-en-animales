@@ -1,0 +1,43 @@
+---
+title: "Informe sobre modelos basados en los hábitos de sueño de mamíferos"
+author: "Anderson Acuña, Duvan Guevara, Gabriel Chavarro"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Cargue de datos
+
+```{r}
+animals_data <- read.csv("./data-mammals.csv")
+```
+
+```{r}
+hist(animals_data$dreaming, 
+     xlim = c(0, 8),
+     ylim = c(0, 20),
+     breaks = 10,
+     col = "orange",
+     main = "Histograma de sueño profundo en especies de mamíferos",
+     xlab = "Horas de sueño",
+     ylab = "Cantidad de especies")
+
+hist(animals_data$total_sleep,
+     xlim = c(0, 24),
+     ylim = c(0, 15),
+     breaks = 10,
+     col = "lightblue",
+     main = "Histograma de sueño total en especies de mamíferos",
+     xlab = "Horas de sueño",
+     ylab = "Cantidad de especies")
+```
+
+
+
+
+
