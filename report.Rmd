@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output: 
   html_document: 
     toc: true
+    number_sections: true
 ---
 
 ```{r setup, include=FALSE}
@@ -40,6 +41,32 @@ hist(animals_data$total_sleep,
 # Modelos usando regresión
 
 ## Estimación de la proporción de sueño profundo en función de factores ecológicos
+
+### Entendimiento más profundo de las horas de sueño
+
+Revisamos las características principales de nuestra variable a predecir, que en 
+nuestro caso será la de sueños (`dreaming`). Haciendo el gráfico de caja para 
+los datos de la variable vemos la presencia de 3 datos atípicos, que están 
+distantes del "límite superior".
+```{r}
+boxplot(animals_data$dreaming,
+        horizontal = TRUE,
+        main = "Gráfico de caja para la variable de 'horas de sueño' mientras duerme")
+```
+
+Tomando el enfoque de obtener una métrica comparable entre especies, calculamos 
+la proporción entre horas de sueño y horas totales (`dreaming / total_sleep`). 
+Esta métrica ahora es libre de distorsiones que pueda aportar la especie en 
+específico; además, concentró los datos redujendo la cantidad de puntos 
+atípicos.
+```{r}
+dreaming_proportion <- animals_data$dreaming / animals_data$total_sleep
+
+boxplot(dreaming_proportion,
+        main = "Caja para la proporción de sueño sobre horas totales dormido",
+        horizontal = TRUE)
+```
+
 
 ```{r}
 danger_frecuency <- sort(table(animals_data$danger), decreasing = TRUE)
