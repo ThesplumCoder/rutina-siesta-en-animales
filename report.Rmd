@@ -37,6 +37,20 @@ hist(animals_data$total_sleep,
      ylab = "Cantidad de especies")
 ```
 
+# Modelos usando regresión
+
+## Estimación de la proporción de sueño profundo en función de factores ecológicos
+
+```{r}
+danger_frecuency <- sort(table(animals_data$danger), decreasing = TRUE)
+
+barplot(danger_frecuency,
+        ylim = c(0,  20),
+        col = "red",
+        main = "Participación en la escala de peligro",
+        xlab = "Nivel de peligro",
+        ylab = "Cantidad de especies")
+```
 
 
 
