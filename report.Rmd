@@ -49,7 +49,9 @@ nuestro caso será la de sueños (`dreaming`). Haciendo el gráfico de caja para
 los datos de la variable vemos la presencia de 3 datos atípicos, que están 
 distantes del "límite superior".
 ```{r}
-boxplot(animals_data$dreaming,
+dreaming_sample <- subset(animals_data, !(is.na(dreaming)))
+
+boxplot(dreaming_sample$dreaming,
         horizontal = TRUE,
         main = "Gráfico de caja para la variable de 'horas de sueño' mientras duerme")
 ```
@@ -60,7 +62,7 @@ Esta métrica ahora es libre de distorsiones que pueda aportar la especie en
 específico; además, concentró los datos redujendo la cantidad de puntos 
 atípicos.
 ```{r}
-dreaming_proportion <- animals_data$dreaming / animals_data$total_sleep
+dreaming_proportion <- dreaming_sample$dreaming / dreaming_sample$total_sleep
 
 boxplot(dreaming_proportion,
         main = "Caja para la proporción de sueño sobre horas totales dormido",
@@ -69,7 +71,7 @@ boxplot(dreaming_proportion,
 
 
 ```{r}
-danger_frecuency <- sort(table(animals_data$danger), decreasing = TRUE)
+danger_frecuency <- sort(table(dreaming_sample$danger), decreasing = TRUE)
 
 barplot(danger_frecuency,
         ylim = c(0,  20),
@@ -79,6 +81,62 @@ barplot(danger_frecuency,
         ylab = "Cantidad de especies")
 ```
 
+### Construcción de la regresión múltiple
 
+Tomando las variables que se refieren a factores ecológicos, tenemos:
+
++ Depredación (`predation`)
++ Exposición (`exposure`)
++ Peligro (`danger`)
+
+Construímos la regresión:
+```{r}
+predation <- dreaming_sample$predation
+exposure <- dreaming_sample$exposure
+danger <- dreaming_sample$danger
+
+dreaming_regresion <- lm(formula = dreaming_proportion ~ predation + exposure + danger)
+summary(dreaming_regresion)
+```
+
+Con los coeficientes de la regresión, podemos plantear la ecuación:
+$$
+dreaming\ proportion = -0.004962(predation) + 0.011017(exposure) - 0.021507(danger) + 0.231325
+$$
+
+```{r}
+dreaming_estimator <- function(predation, exposure, danger) {
+  predation_coef <- -0.004962
+  exposure_coef <- 0.011017
+  danger_coef <- -0.021507
+  intercept <- 0.231325
+  dreaming <- (predation_coef * predation) + (exposure_coef * exposure) + (danger_coef * danger) + intercept
+  
+  return(dreaming)
+}
+```
+
+Obtenemos los residuales y visualizamos cómo se distribuyen:
+```{r}
+dreaming_residuals <- c()
+for (iter in 1:length(dreaming_sample$species)) {
+  specie <- dreaming_sample[iter, ]
+  residual <- dreaming_estimator(specie$predation, specie$exposure, specie$danger) - dreaming_proportion[iter]
+  dreaming_residuals <- c(dreaming_residuals, residual)
+}
+
+hist(dreaming_residuals,
+     xlim = c(-0.6, 0.6),
+     ylim = c(0, 20),
+     col = "purple1",
+     main = "Histograma de los residuales",
+     xlab = "Diferencia entre la estimación y la realidad",
+     ylab = "Frecuencia absoluta")
+boxplot(dreaming_residuals,
+        horizontal = TRUE,
+        col = "purple1",
+        main = "Gráfico de caja para los residuales",
+        xlab = "Diferencia entre la estimación y la realidad")
+```
 
 
