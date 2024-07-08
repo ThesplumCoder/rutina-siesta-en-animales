@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output: 
   html_document: 
     toc: true
+    number_sections: true
 ---
 
 ```{r setup, include=FALSE}
@@ -23,8 +24,8 @@ hist(animals_data$dreaming,
      ylim = c(0, 20),
      breaks = 10,
      col = "orange",
-     main = "Histograma de sueño profundo en especies de mamíferos",
-     xlab = "Horas de sueño",
+     main = "Horas soñando",
+     xlab = "Horas",
      ylab = "Cantidad de especies")
 
 hist(animals_data$total_sleep,
@@ -32,12 +33,135 @@ hist(animals_data$total_sleep,
      ylim = c(0, 15),
      breaks = 10,
      col = "lightblue",
-     main = "Histograma de sueño total en especies de mamíferos",
-     xlab = "Horas de sueño",
+     main = "Horas dormidas totales",
+     xlab = "Horas",
      ylab = "Cantidad de especies")
 ```
 
+# Modelos usando regresión
+
+## Estimación de la proporción de sueño profundo en función de factores ecológicos
+
+### Entendimiento más profundo de las horas de sueño
+
+Revisamos las características principales de nuestra variable a predecir, que en 
+nuestro caso será la de sueños (`dreaming`). Haciendo el gráfico de caja para 
+los datos de la variable vemos la presencia de 3 datos atípicos, que están 
+distantes del "límite superior".
+```{r}
+dreaming_sample <- subset(animals_data, !(is.na(dreaming)) & !(is.na(total_sleep)))
+observations <- length(dreaming_sample$species)
+
+boxplot(dreaming_sample$dreaming,
+        horizontal = TRUE,
+        col = "deepskyblue",
+        main = "Variable horas soñando")
+```
+
+Tomando el enfoque de obtener una métrica comparable entre especies, calculamos 
+la proporción entre horas de sueño y horas totales (`dreaming / total_sleep`). 
+Esta métrica ahora es libre de distorsiones que pueda aportar la especie en 
+específico; además, concentró los datos redujendo la cantidad de puntos 
+atípicos.
+```{r}
+dreaming_proportion <- dreaming_sample$dreaming / dreaming_sample$total_sleep
+
+boxplot(dreaming_proportion,
+        col = "deepskyblue",
+        main = "Proporción de horas soñando sobre horas totales dormido",
+        horizontal = TRUE)
+```
 
 
+```{r}
+danger_frecuency <- sort(table(dreaming_sample$danger), decreasing = TRUE)
 
+barplot(danger_frecuency,
+        ylim = c(0,  20),
+        col = "red",
+        main = "Participación en la escala de peligro",
+        xlab = "Nivel de peligro",
+        ylab = "Cantidad de especies")
+```
 
+### Construcción de la regresión múltiple
+
+Tomando las variables que se refieren a factores ecológicos, tenemos:
+
++ Depredación (`predation`)
++ Exposición (`exposure`)
++ Peligro (`danger`)
+
+Construímos la regresión:
+```{r}
+predation <- dreaming_sample$predation
+exposure <- dreaming_sample$exposure
+danger <- dreaming_sample$danger
+
+dreaming_regresion <- lm(formula = dreaming_proportion ~ predation + exposure + danger)
+summary(dreaming_regresion)
+```
+
+Con los coeficientes de la regresión, podemos plantear la ecuación:
+$$
+dreaming\ proportion = -0.004962(predation) + 0.011017(exposure) - 0.021507(danger) + 0.231325
+$$
+
+```{r}
+dreaming_estimator <- function(predation, exposure, danger) {
+  predation_coef <- -0.004962
+  exposure_coef <- 0.011017
+  danger_coef <- -0.021507
+  intercept <- 0.231325
+  dreaming <- (predation_coef * predation) + (exposure_coef * exposure) + (danger_coef * danger) + intercept
+  
+  return(dreaming)
+}
+```
+
+Obtenemos los residuales y visualizamos cómo se distribuyen:
+```{r}
+dreaming_residuals <- c()
+for (iter in 1:observations) {
+  specie <- dreaming_sample[iter, ]
+  residual <- dreaming_proportion[iter] - dreaming_estimator(specie$predation, specie$exposure, specie$danger) 
+  dreaming_residuals <- c(dreaming_residuals, residual)
+}
+
+hist(dreaming_residuals,
+     xlim = c(-0.4, 0.4),
+     ylim = c(0, 20),
+     col = "purple1",
+     main = "Histograma de los residuales",
+     xlab = "Diferencia entre la estimación y la realidad",
+     ylab = "Frecuencia absoluta")
+boxplot(dreaming_residuals,
+        horizontal = TRUE,
+        col = "purple1",
+        main = "Gráfico de caja para los residuales",
+        xlab = "Diferencia entre la estimación y la realidad")
+```
+
+Finalmente, calculamos el *coeficiente de determinación ajustado* 
+$R^2_{adjusted}$ para establecer qué tan bueno es el modelo de regresión que 
+construimos.
+$$
+R^2_{adjusted} = 1 - \frac{SCE}{STCC} \left(\frac{n - 1}{n - p - 1}\right) \\
+R^2_{adjusted} = 1 - \frac{\sum^n_{i = 1}{(y_i - \hat{y}_i)^2}}{\sum^{n}_{i = 1}{(y_i - \overline{y}_i)^2}} \left(\frac{n - 1}{n - p - 1}\right)
+$$
+```{r}
+sce <- sum(dreaming_residuals ** 2)
+stcc <- sum((dreaming_proportion - mean(dreaming_proportion)) ** 2)
+variable_penalty <- (observations - 1) / (observations - 3 - 1)
+
+r2_adjusted <- 1 - (sce / stcc) * variable_penalty
+```
+
+El valor de $R^2 = `r r2_adjusted`$. Lo que nos quiere decir que solo el 
+`r r2_adjusted * 100`% de la variabilidad de la proporción de horas con sueños 
+es explicada por nuestro modelo, usando las variables de los factores 
+ecológicos.
+
+**Conclusión:** Los factores ecológicos no son suficientes como variables de 
+estímulo si creamos un modelo para estimar la proporción entre horas soñando 
+sobre las horas totales de sueño.
