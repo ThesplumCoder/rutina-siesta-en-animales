@@ -45,9 +45,9 @@ hist(animals_data$total_sleep,
 ### Entendimiento más profundo de las horas de sueño
 
 Revisamos las características principales de nuestra variable a predecir, que en 
-nuestro caso será la de sueños (`dreaming`). Haciendo el gráfico de caja para 
-los datos de la variable vemos la presencia de 3 datos atípicos, que están 
-distantes del "límite superior".
+nuestro caso será la de horas de sueño profundo (`dreaming`). Haciendo el 
+gráfico de caja para los datos de la variable vemos la presencia de 3 datos 
+atípicos, que están distantes del "límite superior".
 ```{r}
 dreaming_sample <- subset(animals_data, !(is.na(dreaming)) & !(is.na(total_sleep)))
 observations <- length(dreaming_sample$species)
@@ -55,7 +55,7 @@ observations <- length(dreaming_sample$species)
 boxplot(dreaming_sample$dreaming,
         horizontal = TRUE,
         col = "deepskyblue",
-        main = "Variable horas soñando")
+        main = "Horas de sueño profundo")
 ```
 
 Tomando el enfoque de obtener una métrica comparable entre especies, calculamos 
@@ -68,7 +68,7 @@ dreaming_proportion <- dreaming_sample$dreaming / dreaming_sample$total_sleep
 
 boxplot(dreaming_proportion,
         col = "deepskyblue",
-        main = "Proporción de horas soñando sobre horas totales dormido",
+        main = "Proporción de horas sueño profundo sobre horas totales dormido",
         horizontal = TRUE)
 ```
 
