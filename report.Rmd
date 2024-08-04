@@ -19,24 +19,49 @@ animals_data <- read.csv("./data-mammals.csv")
 ```
 
 ```{r}
+hist(animals_data$non_dreaming,
+     xlim = c(0, 24),
+     breaks = 15,
+     col = "coral",
+     main = "Horas de sueño liviano",
+     xlab = "Horas",
+     ylab = "Cantidad de especies")
+
 hist(animals_data$dreaming, 
      xlim = c(0, 8),
      ylim = c(0, 20),
-     breaks = 10,
-     col = "orange",
-     main = "Horas soñando",
+     breaks = 15,
+     col = "lightskyblue",
+     main = "Horas de sueño profundo",
      xlab = "Horas",
      ylab = "Cantidad de especies")
 
 hist(animals_data$total_sleep,
      xlim = c(0, 24),
      ylim = c(0, 15),
-     breaks = 10,
-     col = "lightblue",
+     breaks = 15,
+     col = "lightgreen",
      main = "Horas dormidas totales",
      xlab = "Horas",
      ylab = "Cantidad de especies")
 ```
+
+```{r}
+predation_frecuency <- sort(table(animals_data$predation), decreasing = TRUE)
+exposure_frecuency <- sort(table(animals_data$exposure), decreasing = TRUE)
+par(mfrow = c(1, 2))
+barplot(predation_frecuency, 
+        col = "firebrick1", 
+        main = "Depredación", 
+        xlab = "Nivel", 
+        ylab = "Cantidad de especies")
+barplot(exposure_frecuency, 
+        col = "gold", 
+        main = "Exposición", 
+        xlab = "Nivel", 
+        ylab = "Cantidad de especies")
+```
+
 
 # Modelos usando regresión
 
